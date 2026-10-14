@@ -1,0 +1,117 @@
+// Habitcraft data model.
+// Run `npm run db:push` after setting DATABASE_URL to create these tables.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+/// A booked (or pending) $97 Body Plan Session.
+model Booking {
+  id            String        @id @default(cuid())
+  createdAt     DateTime      @default(now())
+
+  // Scheduling
+  slotDate      DateTime // the chosen day + time (stored in UTC)
+  timezone      String // e.g. "America/New_York"
+
+  // Client details (collected in the booking stepper)
+  name          String
+  email         String
+  goal          String?
+  confirmedAdult Boolean      @default(false)
+
+  // Payment
+  status        BookingStatus @default(PENDING)
+  amountCents   Int           @default(9700)
+  stripeSession String?       @unique // Checkout Session id
+  paidAt        DateTime?
+
+  @@index([email])
+  @@index([slotDate])
+}
+
+enum BookingStatus {
+  PENDING
+  PAID
+  CANCELLED
+  COMPLETED
+}
+
+/// A Store order (direct-buy products only; affiliate items never enter here).
+model Order {
+  id            String      @id @default(cuid())
+  createdAt     DateTime    @default(now())
+
+  email         String
+  name          String?
+  shipName      String?
+  shipAddress   String?
+  shipCity      String?
+  shipState     String?
+  shipZip       String?
+
+  items         OrderItem[]
+
+  subtotalCents Int
+  discountCents Int         @default(0)
+  shippingCents Int         @default(0)
+  totalCents    Int
+  promoCode     String?
+  shippingTier  String      @default("standard") // standard | express | free
+
+  status        OrderStatus @default(PENDING)
+  stripeSession String?     @unique
+  paidAt        DateTime?
+
+  @@index([email])
+}
+
+model OrderItem {
+  id          String  @id @default(cuid())
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId     String
+
+  productId   String  // matches lib/products.ts id
+  productName String
+  option      String? // flavour / size
+  quantity    Int
+  priceCents  Int
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FULFILLED
+  CANCELLED
+}
+
+/// Optional: log Coach B conversations for support follow-up & the /ai-assistant
+/// data-deletion flow described in the brief. Store only what you need.
+model ChatLog {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  sessionId String // anonymous client-generated id (localStorage)
+  site      String // "fitness" | "store"
+  role      String // "user" | "assistant"
+  content   String   @db.Text
+
+  @@index([sessionId])
+}
+
+/// Human-handoff / lead captured from the chat or the contact form.
+model Lead {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  name      String
+  email     String
+  message   String   @db.Text
+  source    String   @default("contact") // "contact" | "chat"
+
+  @@index([email])
+}

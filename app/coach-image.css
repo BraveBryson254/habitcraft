@@ -1,0 +1,6 @@
+/* Coach B cut-out source, used by .cb and .av as a CSS variable.
+   Points at the public asset so you can swap it without touching code.
+   To add pose variants, see components/CoachScene.tsx + README §Imagery. */
+:root {
+  --cbimg: url("/coach-b/coach-b-full.png");
+}
