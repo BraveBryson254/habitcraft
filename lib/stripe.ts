@@ -7,9 +7,8 @@ import { stripeEnabled } from "./config";
  */
 export const stripe: Stripe | null = stripeEnabled
   ? new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-      // Pin the API version your account is on. Update after testing in the
-      // Stripe dashboard; see README §Stripe.
-      apiVersion: "2024-10-28.acacia",
+      // No apiVersion pin: the SDK uses the version it was built against,
+      // which always matches its own TypeScript types.
       typescript: true,
     })
   : null;

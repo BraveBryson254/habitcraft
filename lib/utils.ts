@@ -18,13 +18,14 @@ export function isEmail(v: string): boolean {
 }
 
 /** The next N days as date objects (used in the booking stepper). */
-export function nextDays(n: number): Array<{ date: Date; dn: string; d: number; full: string }> {
-  const out: Array<{ date: Date; dn: string; d: number; full: string }> = [];
+export function nextDays(n: number): Array<{ k: number; date: Date; dn: string; d: number; full: string }> {
+  const out: Array<{ k: number; date: Date; dn: string; d: number; full: string }> = [];
   const now = new Date();
   for (let i = 1; i <= n; i++) {
     const d = new Date(now);
     d.setDate(now.getDate() + i);
     out.push({
+      k: i, // 1..n — a stable, truthy key for the selected day
       date: d,
       dn: d.toLocaleDateString("en-US", { weekday: "short" }),
       d: d.getDate(),
